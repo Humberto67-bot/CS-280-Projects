@@ -1,4 +1,4 @@
-## CS-280-Projects
+## CS-280-Projects 
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://ksherbert-hcc.github.io/CS-280-Projects/)
 [![GitHub Actions CI](https://github.com/ksherbert-hcc/CS-280-Projects/actions/workflows/CI.yml/badge.svg)](https://github.com/ksherbert-hcc/CS-280-Projects/actions/workflows/CI.yml?query=branch%3Amain)
