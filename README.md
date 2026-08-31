@@ -1,7 +1,7 @@
 ## CS-280-Projects 
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://ksherbert-hcc.github.io/CS-280-Projects/)
-[![GitHub Actions CI](https://github.com/ksherbert-hcc/CS-280-Projects/actions/workflows/CI.yml/badge.svg)](https://github.com/ksherbert-hcc/CS-280-Projects/actions/workflows/CI.yml?query=branch%3Amain)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://Humberto67-bot.github.io/CS-280-Projects/)
+[![GitHub Actions CI](https://github.com/Humberto67-bot/CS-280-Projects/actions/workflows/CI.yml/badge.svg)](https://github.com/Humberto67-bot/CS-280-Projects/actions/workflows/CI.yml?query=branch%3Amain)
 
 This is the starter package for the Holy Cross College CS 280 Data Structures course.
 
