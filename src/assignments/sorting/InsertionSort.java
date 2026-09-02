@@ -17,7 +17,7 @@ public class InsertionSort extends SortingAlgorithm{
     /**
      * sorts an array of integers using the insertion sort algoritm
      * 
-     * @param helps to sort the array 
+     * @param array helps to sort the array 
      */
     @Override
     public void sort(Integer[] array) {

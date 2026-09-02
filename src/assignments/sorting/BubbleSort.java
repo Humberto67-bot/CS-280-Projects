@@ -1,5 +1,14 @@
 package assignments.sorting;
 
+
+public class BubbleSort extends SortingAlgorithm {
+
+    /**
+     * Default constructor. Dummy constructor line
+     */
+    public BubbleSort() {}
+    
+
 /**
  * Swap adjacent elements over and over until the whole array is sorted.
  * BubbleSort
