@@ -1,14 +1,5 @@
 package assignments.sorting;
 
-
-public class BubbleSort extends SortingAlgorithm {
-
-    /**
-     * Default constructor. Dummy constructor line
-     */
-    public BubbleSort() {}
-    
-
 /**
  * Swap adjacent elements over and over until the whole array is sorted.
  * BubbleSort
@@ -16,11 +7,17 @@ public class BubbleSort extends SortingAlgorithm {
 public class BubbleSort extends SortingAlgorithm {
     
     /**
+     * Default constructor. Dummy constructor line
+     */
+    public BubbleSort() {}
+
+    /**
      * Sort an array in-place using bubble sort.
      * Post condition: array is sorted in ascending order.
      * 
      * @param array an array of integers
      */
+    @Override
     public void sort(Integer[] array) {
         for (int k = array.length; k >= 2; k--) {
             for (int i = 0; i < k - 1; i++) { 
