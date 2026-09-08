@@ -23,7 +23,7 @@ public class SelectionSort extends SortingAlgorithm {
         for (int i = 0; i< n - 1; i++) {
             //find the minimum element in unsorted array
             int min_idx = i;
-            for (int j = 1 + 1; j < n; j++) {
+            for (int j = i + 1; j < n; j++) {
                 if (array[j] < array[min_idx]) {
                     min_idx = j;
                 }
