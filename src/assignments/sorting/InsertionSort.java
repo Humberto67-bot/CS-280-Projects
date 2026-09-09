@@ -1,32 +1,30 @@
 package assignments.sorting;
 
 /**
- * 
- * InsertionSort
+ * Insertion sort implementation.
  */
-public class InsertionSort extends SortingAlgorithm{
+public class InsertionSort extends SortingAlgorithm {
 
     /**
-     * default constructor
+     * Default constructor.
      */
-
-    public InsertionSort() {
-        //Empty constructor
-    }
+    public InsertionSort() {}
 
     /**
-     * sorts an array of integers using the insertion sort algoritm
+     * Sorts an array of integers using the insertion sort algorithm.
      * 
-     * @param array helps to sort the array 
+     * @param array an array of integers to sort
      */
     @Override
     public void sort(Integer[] array) {
+        if (array == null || array.length <= 1) {
+            return;
+        }
+
         for (int i = 1; i < array.length; i++) {
-            int key = array[i];
+            Integer key = array[i];
             int j = i - 1;
 
-            // Moves elements of arr that are greater than 
-            // the number to one position ahead of their current position
             while (j >= 0 && array[j] > key) {
                 array[j + 1] = array[j];
                 j = j - 1;
@@ -34,13 +32,4 @@ public class InsertionSort extends SortingAlgorithm{
             array[j + 1] = key;
         }
     }
-
-    /**
-    * run validation tests
-    * @param args command line args
-    */
-    public static void main(String[] args) {
-        SortingAlgorithm.validate(new InsertionSort());
-    }
-    
 }
