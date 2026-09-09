@@ -1,35 +1,33 @@
 package assignments.sorting;
 
 /**
- * Insertion sort implementation.
+ * Insertion Sort implementation working on generic Comparable types.
+ *
+ * @param <T> the type of elements to be sorted
  */
-public class InsertionSort extends SortingAlgorithm {
+public class InsertionSort<T extends Comparable<T>> extends SortingAlgorithm<T> {
 
     /**
-     * Default constructor.
+     * Default constructor for documentation purposes.
      */
     public InsertionSort() {}
 
-    /**
-     * Sorts an array of integers using the insertion sort algorithm.
-     * 
-     * @param array an array of integers to sort
-     */
     @Override
-    public void sort(Integer[] array) {
-        if (array == null || array.length <= 1) {
-            return;
-        }
-
-        for (int i = 1; i < array.length; i++) {
-            Integer key = array[i];
+    public void sort(T[] array) {
+        int n = array.length;
+        for (int i = 1; i < n; i++) {
+            T key = array[i];
             int j = i - 1;
 
-            while (j >= 0 && array[j] > key) {
+            while (j >= 0 && array[j].compareTo(key) > 0) {
                 array[j + 1] = array[j];
-                j = j - 1;
+                j--;
             }
             array[j + 1] = key;
         }
+    }
+
+    public static void main(String[] args) {
+        SortingAlgorithm.validate(new InsertionSort<>());
     }
 }

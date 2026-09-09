@@ -1,46 +1,36 @@
 package assignments.sorting;
 
 /**
- * implementation of the SelectionSort algorithm.
+ * Selection Sort implementation working on generic Comparable types.
+ *
+ * @param <T> the type of elements to be sorted
  */
-public class SelectionSort extends SortingAlgorithm {
+public class SelectionSort<T extends Comparable<T>> extends SortingAlgorithm<T> {
 
     /**
-     * Default constructor.
+     * Default constructor for documentation purposes.
      */
     public SelectionSort() {}
 
-    /**
-     * sorts an array of integers in-place using the SelectionSort algorithm
-     * 
-     * @param array the array to be sorted
-     */
     @Override
-    public void sort(Integer[] array) {
+    public void sort(T[] array) {
         int n = array.length;
-
-        // one by one moves the boundary of the unsortd subarray
-        for (int i = 0; i< n - 1; i++) {
-            //find the minimum element in unsorted array
-            int min_idx = i;
+        for (int i = 0; i < n - 1; i++) {
+            int minIndex = i;
             for (int j = i + 1; j < n; j++) {
-                if (array[j] < array[min_idx]) {
-                    min_idx = j;
+                if (array[j].compareTo(array[minIndex]) < 0) {
+                    minIndex = j;
                 }
             }
-
-            //swap the minimum found element with the first element
-            Integer temp = array[min_idx];
-            array[min_idx] = array[i];
-            array[i] = temp;
+            if (minIndex != i) {
+                T temp = array[i];
+                array[i] = array[minIndex];
+                array[minIndex] = temp;
+            }
         }
     }
 
-    /**
-     * run validation tests
-     * @param args command line args
-     */
     public static void main(String[] args) {
-        SortingAlgorithm.validate(new SelectionSort());
+        SortingAlgorithm.validate(new SelectionSort<>());
     }
 }
