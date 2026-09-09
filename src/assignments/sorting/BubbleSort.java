@@ -19,9 +19,12 @@ public class BubbleSort extends SortingAlgorithm {
      */
     @Override
     public void sort(Integer[] array) {
+        if (array == null || array.length <= 1) {
+            return;
+        }
+
         for (int k = array.length; k >= 2; k--) {
             for (int i = 0; i < k - 1; i++) { 
-                // Using square brackets for arrays!
                 if (array[i] > array[i + 1]) {
                     swap(array, i, i + 1);
                 }
@@ -30,14 +33,13 @@ public class BubbleSort extends SortingAlgorithm {
     }
 
     /**
-     * swap two elements within an array.
+     * Swap two elements within an array.
      * 
      * @param array the array to swap values
      * @param i the first index to swap
      * @param j the second index to swap
      */
     private void swap(Integer[] array, int i, int j) {
-        // Using square brackets for arrays!
         Integer temp = array[i];
         array[i] = array[j];
         array[j] = temp;
@@ -48,22 +50,17 @@ public class BubbleSort extends SortingAlgorithm {
      * @param args command line args
      */
     public static void main(String[] args) {
-        // Capitalized BubbleSort
         SortingAlgorithm.validate(new BubbleSort());
         
-        // Capitalized System
         System.out.println("BubbleSort has passed all tests.");
 
-        // Fill an array with random numbers
         int N = 6767;
         Integer[] array = new Integer[N];
         
-        // Added the missing 'i'
         for (int i = 0; i < array.length; i++) {
             array[i] = (int)(N * Math.random());
         }
 
-        // measuring runtime
         SortingAlgorithm sorter = new BubbleSort();
         long start = System.nanoTime();
         sorter.sort(array);
