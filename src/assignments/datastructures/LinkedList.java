@@ -1,20 +1,23 @@
 package assignments.datastructures;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import adt.List;
+import adt.Stack;
 
 /// An extensible list backed by a chain of nodes.
 /// 
 /// The idea here is to wrap each datum in a larger structure, a *node*,
-///  which also contains a pointer to the node containing the *next* element in the list.
+/// which also contains a pointer to the node containing the *next* element in the list.
 /// This structure permits efficient insertion and deletion,
-///  in the sense that it only requires rearranging pointers nearby where the change takes place.
+/// in the sense that it only requires rearranging pointers nearby where the change takes place.
 /// 
 /// However, this structure foregoes *random access*, i.e. easy access to arbitrary locations in the list.
 /// In order to make any changes to a location in the middle of the list,
-///  one must first traverse through the chain of nodes from the beginning of the list.
+/// one must first traverse through the chain of nodes from the beginning of the list.
 /// 
 /// @param <T> the type of each element
-public class LinkedList<T> implements List<T> {
+public class LinkedList<T> implements List<T>, Iterable<T>, Stack<T> {
     private Node head;
     private int size;
 
@@ -31,7 +34,6 @@ public class LinkedList<T> implements List<T> {
      * @return the number of items
      */
     public int length() {
-        // TODO implement this method
         return this.size;
     }
     
@@ -42,9 +44,8 @@ public class LinkedList<T> implements List<T> {
      */
     public T at(int index) {
         assert 0 <= index && index < this.size;
-        // TODO implement this method
         Node current = this.head;
-        for(int i = 0; i < index; i++) {
+        for (int i = 0; i < index; i++) {
             current = current.link;
         }
         return current.data;
@@ -57,9 +58,8 @@ public class LinkedList<T> implements List<T> {
      */
     public void set(int index, T value) {
         assert 0 <= index && index < this.size;
-        // TODO implement this method
         Node current = this.head;
-        for (int i = 0; i < index; i ++) {
+        for (int i = 0; i < index; i++) {
             current = current.link;
         }
         current.data = value;
@@ -71,7 +71,6 @@ public class LinkedList<T> implements List<T> {
      * @return true iff the collection contains value
      */
     public boolean contains(T value) {
-        // TODO implement this method
         Node current = this.head;
         while (current != null) {
             if (value == null ? current.data == null : value.equals(current.data)) {
@@ -89,7 +88,6 @@ public class LinkedList<T> implements List<T> {
      */
     public void insert(int index, T value) {
         assert 0 <= index && index <= this.size;
-        // TODO implement this method
         if (index == 0) {
             this.head = new Node(value, this.head);
         } else {
@@ -109,7 +107,6 @@ public class LinkedList<T> implements List<T> {
      */
     public T delete(int index) {
         assert 0 <= index && index < this.size;
-        // TODO implement this method
         T removedValue;
         if (index == 0) {
             removedValue = this.head.data;
@@ -120,7 +117,7 @@ public class LinkedList<T> implements List<T> {
                 current = current.link;
             }
             removedValue = current.link.data;
-            current.link = current.link.link; //Ex. from class
+            current.link = current.link.link;
         }
         this.size--;
         return removedValue;
@@ -144,12 +141,90 @@ public class LinkedList<T> implements List<T> {
         }
     }
 
+    //implementing iterable
+
+    @Override
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
+            private Node cursor = head;
+
+            @Override
+            public boolean hasNext() {
+                return cursor != null;
+            }
+
+            @Override
+            public T next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                T item = cursor.data;
+                cursor = cursor.link;
+                return item;
+            }
+        };
+    }
+
+    //implementing stack
+
+    /**
+     * Push an element onto the top of the stack.
+     * Prepends to index 0 for O(1) efficiency.
+     */
+    @Override
+    public void push(T value) {
+        this.insert(0, value);
+    }
+
+    /**
+     * remove and return the element at the top of the stack
+     */
+    @Override
+    public T pop() {
+        assert this.size > 0 : "Cannot pop from an empty stack";
+        return this.delete(0);
+    }
+
+    /**
+     * return the element at the top of the stack without removing it
+     */
+    @Override
+    public T peek() {
+        assert this.size > 0 : "Cannot peek into an empty stack";
+        return this.at(0);
+    }
+
+    /**
+     * Alias for peek() in case adt.Stack uses top().
+     */
+    public T top() {
+        return this.peek();
+    }
+
+    /**
+     * Check if the stack is empty.
+     */
+    @Override
+    public boolean isEmpty() {
+        return this.size == 0;
+    }
+
     /**
      * Run validation tests.
      * @param args command-line args
      */
     public static void main(String[] args) {
+        // Run ADT validations
         List.validate(new LinkedList<>());
+        Stack.validate(new LinkedList<>());
+
+        // Test iterator
+        LinkedList<Integer> list = new LinkedList<>();
+        for (int i = 0; i < 5; i++) list.insert(0, i);
+        Iterator<Integer> iter = list.iterator();
+        for (int i = 5; i > 0; i--) assert iter.next().equals(i - 1);
+        assert !iter.hasNext();
+
         System.out.println("LinkedList passes all tests.");
     }
 }
