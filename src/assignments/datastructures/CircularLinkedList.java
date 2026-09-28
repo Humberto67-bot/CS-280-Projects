@@ -3,7 +3,7 @@ package assignments.datastructures;
 import adt.List;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
- 
+
 /**
  * Circular singly linked list implementation for the adt.List interface.
  * Maintains a reference to the tail node, where tail.next represents head.

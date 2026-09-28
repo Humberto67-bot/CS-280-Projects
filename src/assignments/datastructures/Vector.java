@@ -4,43 +4,47 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import adt.List;
+import adt.Queue;
 
-/// An extensible list backed by an array buffer.
+/// A circular singly-linked list backed by node links.
 /// 
-/// The idea here is to store your data in an array larger than it has to be.
-/// This gives you room to add more items to the end, without having to reallocate memory every time.
-/// You simply need to keep track of which parts of the array are currently in use.
-/// 
-/// Eventually, the array buffer *will* run out of space.
-/// Then you need to allocate an even larger buffer, and copy the present buffer to the new one.
-/// This is a very expensive operation, so you want to make sure it occurs very infrequently.
+/// The last node links back to the first node.
+/// Keeping a tail pointer gives us quick access to both the start and end.
 /// 
 /// @param <T> the type of each element
-public class Vector<T> implements List<T>, Iterable<T> {
-    /** The initial amount of buffer space in a newly-created vector. */
-    public static final int INITIAL_BUFFER_SIZE = 10;
-    private T[] array;
+public class CircularLinkedList<T> implements List<T>, Queue<T>, Iterable<T> {
+
+    // internal node class
+    private static class Node<T> {
+        T data;
+        Node<T> next;
+
+        Node(T data) {
+            this.data = data;
+        }
+    }
+
+    // Points to the very last node in the cycle
+    private Node<T> tail;
+    // size of the list
     private int size;
 
     /**
-     * Initialize an empty vector.
+     * Initialize an empty circular linked list.
      */
-    @SuppressWarnings("unchecked")
-    public Vector() {
-        // Generic types (i.e. `T`) don't technically exist at runtime, so you have to allocate arrays generically and then cast them.
-        // This is normally bad practice and generates a warning, hence the @SuppressWarnings tag before the method.
-        this.array = (T[])(new Object[INITIAL_BUFFER_SIZE]);
+    public CircularLinkedList() {
+        this.tail = null;
         this.size = 0;
     }
 
     /**
-     * Compute the number of items in this list.
+     * Compute the number of items in this collection.
      * @return the number of items
      */
     public int length() {
         return this.size;
     }
-    
+
     /**
      * Fetch an item from the list.
      * @param index the location of the item - a nonnegative integer less than the length of the list
@@ -50,9 +54,9 @@ public class Vector<T> implements List<T>, Iterable<T> {
         // You may use assert statements to enforce pre-conditions at runtime.
         assert 0 <= index && index < this.size;
 
-        return this.array[index];
+        return getNode(index).data;
     }
-    
+
     /**
      * Change an item in the list.
      * @param index the location of the item - a nonnegative integer less than the length of the list
@@ -62,45 +66,64 @@ public class Vector<T> implements List<T>, Iterable<T> {
         // You may use assert statements to enforce pre-conditions at runtime.
         assert 0 <= index && index < this.size;
 
-        this.array[index] = value;
+        getNode(index).data = value;
     }
-    
+
     /**
      * Check if the list contains a given value.
      * @param value the value to look for
      * @return true iff the collection contains value
      */
     public boolean contains(T value) {
+        if (this.size == 0) {
+            return false;
+        }
+
+        // start searching from head
+        Node<T> current = this.tail.next;
         for (int i = 0; i < this.size; i++) {
-            if (Objects.equals(this.array[i], value)) {
+            if (Objects.equals(current.data, value)) {
                 return true;
             }
+            current = current.next;
         }
         return false;
     }
-    
+
     /**
      * Insert an item into the list.
-     * @param index the location of where to put the item - a nonnegative integer less than or equal to the length of the list
+     * @param index the location of where to put the item - a nonnegative integer less than or equal to the length
      * @param value the new value to put at the given location
      */
     public void insert(int index, T value) {
         // You may use assert statements to enforce pre-conditions at runtime.
-        // Note this function has a somewhat different pre-condition!
         assert 0 <= index && index <= this.size;
 
-        if (this.size == this.array.length) {
-            resize(this.array.length * 2);
+        Node<T> newNode = new Node<>(value);
+
+        if (this.size == 0) {
+            // first element points to itself
+            newNode.next = newNode;
+            this.tail = newNode;
+        } else if (index == 0) {
+            // insert at front
+            newNode.next = this.tail.next;
+            this.tail.next = newNode;
+        } else if (index == this.size) {
+            // Insert at the end and update tail reference
+            newNode.next = this.tail.next;
+            this.tail.next = newNode;
+            this.tail = newNode;
+        } else {
+            // walk up to the spot
+            Node<T> prev = getNode(index - 1);
+            newNode.next = prev.next;
+            prev.next = newNode;
         }
 
-        for (int i = this.size; i > index; i--) {
-            this.array[i] = this.array[i - 1];
-        }
-
-        this.array[index] = value;
         this.size++;
     }
-    
+
     /**
      * Remove an item from the list.
      * @param index the location to delete from - a nonnegative integer less than the length of the list
@@ -110,43 +133,96 @@ public class Vector<T> implements List<T>, Iterable<T> {
         // You may use assert statements to enforce pre-conditions at runtime.
         assert 0 <= index && index < this.size;
 
-        T removedItem = this.array[index];
+        T removedData;
 
-        for (int i = index; i < this.size - 1; i++) {
-            this.array[i] = this.array[i + 1];
+        if (this.size == 1) {
+            // only one item left
+            removedData = this.tail.data;
+            this.tail = null;
+        } else if (index == 0) {
+            // removing front node
+            Node<T> head = this.tail.next;
+            removedData = head.data;
+            this.tail.next = head.next;
+        } else {
+            Node<T> prev = getNode(index - 1);
+            Node<T> target = prev.next;
+            removedData = target.data;
+            prev.next = target.next;
+
+            // update tail if we deleted the last node
+            if (index == this.size - 1) {
+                this.tail = prev;
+            }
         }
 
-        this.array[this.size - 1] = null;
         this.size--;
-
-        return removedItem;
+        return removedData;
     }
 
-    /**
-     * Resize the internal buffer array.
-     * 
-     * This method involves copying from the current buffer to a newly allocated one.
-     * 
-     * @param newSize the new size of the internal buffer array
-     */
-    @SuppressWarnings("unchecked")
-    private void resize(int newSize) {
-        T[] newArray = (T[])(new Object[newSize]);
-        for (int i = 0; i < this.size; i++) {
-            newArray[i] = this.array[i];
+    // helper to step through nodes to an index
+    private Node<T> getNode(int index) {
+        Node<T> current = this.tail.next; // start at head
+        for (int i = 0; i < index; i++) {
+            current = current.next;
         }
-        this.array = newArray;
+        return current;
+    }
+
+    // --- Queue methods ---
+
+    /**
+     * Add an item to the back of the queue.
+     * @param value the item to add
+     */
+    @Override
+    public void enqueue(T value) {
+        // just insert at the end of the list
+        insert(this.size, value);
     }
 
     /**
-     * Returns an iterator over the elements in this vector in proper sequence.
-     *
-     * @return an Iterator over the elements.
+     * Remove and return the front item.
+     * @return front item
+     */
+    @Override
+    public T dequeue() {
+        assert this.size > 0;
+        // takes from the front
+        return delete(0);
+    }
+
+    /**
+     * Look at the front item without removing it.
+     * @return front item
+     */
+    @Override
+    public T peek() {
+        assert this.size > 0;
+        return at(0);
+    }
+
+    /**
+     * Check if queue is empty
+     * @return true if empty
+     */
+    @Override
+    public boolean isEmpty() {
+        return this.size == 0;
+    }
+
+    // --- Iterator and main ---
+
+    /**
+     * Returns an iterator over the elements in this list.
+     * @return an Iterator over the elements
      */
     @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
             private int cursor = 0;
+            // start at head if it exists
+            private Node<T> current = (tail == null) ? null : tail.next;
 
             @Override
             public boolean hasNext() {
@@ -158,7 +234,10 @@ public class Vector<T> implements List<T>, Iterable<T> {
                 if (!hasNext()) {
                     throw new NoSuchElementException();
                 }
-                return array[cursor++];
+                T data = current.data;
+                current = current.next;
+                cursor++;
+                return data;
             }
         };
     }
@@ -168,15 +247,9 @@ public class Vector<T> implements List<T>, Iterable<T> {
      * @param args command-line args
      */
     public static void main(String[] args) {
-        List.validate(new Vector<>());
+        List.validate(new CircularLinkedList<>());
+        Queue.validate(new CircularLinkedList<>());
 
-        // Test iterator.
-        Vector<Integer> vector = new Vector<>();
-        for (int i = 0; i < INITIAL_BUFFER_SIZE; i ++) vector.insert(0, i);
-        Iterator<Integer> iter = vector.iterator();
-        for (int i = INITIAL_BUFFER_SIZE; i > 0; i --) assert iter.next().equals(i-1);
-        assert !iter.hasNext();
-
-        System.out.println("Vector passes all tests.");
+        System.out.println("CircularLinkedList passes all tests.");
     }
 }
