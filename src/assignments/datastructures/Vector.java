@@ -4,47 +4,44 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import adt.List;
-import adt.Queue;
+import adt.Stack;
 
-/// A circular singly-linked list backed by node links.
+/// An extensible list backed by an array buffer.
 /// 
-/// The last node links back to the first node.
-/// Keeping a tail pointer gives us quick access to both the start and end.
+/// The idea here is to store your data in an array larger than it has to be.
+/// This gives you room to add more items to the end, without having to reallocate memory every time.
+/// You simply need to keep track of which parts of the array are currently in use.
+/// 
+/// Eventually, the array buffer *will* run out of space.
+/// Then you need to allocate an even larger buffer, and copy the present buffer to the new one.
+/// This is a very expensive operation, so you want to make sure it occurs very infrequently.
 /// 
 /// @param <T> the type of each element
-public class CircularLinkedList<T> implements List<T>, Queue<T>, Iterable<T> {
-
-    // internal node class
-    private static class Node<T> {
-        T data;
-        Node<T> next;
-
-        Node(T data) {
-            this.data = data;
-        }
-    }
-
-    // Points to the very last node in the cycle
-    private Node<T> tail;
-    // size of the list
+public class Vector<T> implements List<T>, Iterable<T>, Stack<T> {
+    /** The initial amount of buffer space in a newly-created vector. */
+    public static final int INITIAL_BUFFER_SIZE = 10;
+    private T[] array;
     private int size;
 
     /**
-     * Initialize an empty circular linked list.
+     * Initialize an empty vector.
      */
-    public CircularLinkedList() {
-        this.tail = null;
+    @SuppressWarnings("unchecked")
+    public Vector() {
+        // Generic types (i.e. `T`) don't technically exist at runtime, so you have to allocate arrays generically and then cast them.
+        // This is normally bad practice and generates a warning, hence the @SuppressWarnings tag before the method.
+        this.array = (T[])(new Object[INITIAL_BUFFER_SIZE]);
         this.size = 0;
     }
 
     /**
-     * Compute the number of items in this collection.
+     * Compute the number of items in this list.
      * @return the number of items
      */
     public int length() {
         return this.size;
     }
-
+    
     /**
      * Fetch an item from the list.
      * @param index the location of the item - a nonnegative integer less than the length of the list
@@ -54,9 +51,9 @@ public class CircularLinkedList<T> implements List<T>, Queue<T>, Iterable<T> {
         // You may use assert statements to enforce pre-conditions at runtime.
         assert 0 <= index && index < this.size;
 
-        return getNode(index).data;
+        return this.array[index];
     }
-
+    
     /**
      * Change an item in the list.
      * @param index the location of the item - a nonnegative integer less than the length of the list
@@ -66,64 +63,45 @@ public class CircularLinkedList<T> implements List<T>, Queue<T>, Iterable<T> {
         // You may use assert statements to enforce pre-conditions at runtime.
         assert 0 <= index && index < this.size;
 
-        getNode(index).data = value;
+        this.array[index] = value;
     }
-
+    
     /**
      * Check if the list contains a given value.
      * @param value the value to look for
      * @return true iff the collection contains value
      */
     public boolean contains(T value) {
-        if (this.size == 0) {
-            return false;
-        }
-
-        // start searching from head
-        Node<T> current = this.tail.next;
         for (int i = 0; i < this.size; i++) {
-            if (Objects.equals(current.data, value)) {
+            if (Objects.equals(this.array[i], value)) {
                 return true;
             }
-            current = current.next;
         }
         return false;
     }
-
+    
     /**
      * Insert an item into the list.
-     * @param index the location of where to put the item - a nonnegative integer less than or equal to the length
+     * @param index the location of where to put the item - a nonnegative integer less than or equal to the length of the list
      * @param value the new value to put at the given location
      */
     public void insert(int index, T value) {
         // You may use assert statements to enforce pre-conditions at runtime.
+        // Note this function has a somewhat different pre-condition!
         assert 0 <= index && index <= this.size;
 
-        Node<T> newNode = new Node<>(value);
-
-        if (this.size == 0) {
-            // first element points to itself
-            newNode.next = newNode;
-            this.tail = newNode;
-        } else if (index == 0) {
-            // insert at front
-            newNode.next = this.tail.next;
-            this.tail.next = newNode;
-        } else if (index == this.size) {
-            // Insert at the end and update tail reference
-            newNode.next = this.tail.next;
-            this.tail.next = newNode;
-            this.tail = newNode;
-        } else {
-            // walk up to the spot
-            Node<T> prev = getNode(index - 1);
-            newNode.next = prev.next;
-            prev.next = newNode;
+        if (this.size == this.array.length) {
+            resize(this.array.length * 2);
         }
 
+        for (int i = this.size; i > index; i--) {
+            this.array[i] = this.array[i - 1];
+        }
+
+        this.array[index] = value;
         this.size++;
     }
-
+    
     /**
      * Remove an item from the list.
      * @param index the location to delete from - a nonnegative integer less than the length of the list
@@ -133,96 +111,87 @@ public class CircularLinkedList<T> implements List<T>, Queue<T>, Iterable<T> {
         // You may use assert statements to enforce pre-conditions at runtime.
         assert 0 <= index && index < this.size;
 
-        T removedData;
+        T removedItem = this.array[index];
 
-        if (this.size == 1) {
-            // only one item left
-            removedData = this.tail.data;
-            this.tail = null;
-        } else if (index == 0) {
-            // removing front node
-            Node<T> head = this.tail.next;
-            removedData = head.data;
-            this.tail.next = head.next;
-        } else {
-            Node<T> prev = getNode(index - 1);
-            Node<T> target = prev.next;
-            removedData = target.data;
-            prev.next = target.next;
-
-            // update tail if we deleted the last node
-            if (index == this.size - 1) {
-                this.tail = prev;
-            }
+        for (int i = index; i < this.size - 1; i++) {
+            this.array[i] = this.array[i + 1];
         }
 
+        this.array[this.size - 1] = null;
         this.size--;
-        return removedData;
+
+        return removedItem;
     }
 
-    // helper to step through nodes to an index
-    private Node<T> getNode(int index) {
-        Node<T> current = this.tail.next; // start at head
-        for (int i = 0; i < index; i++) {
-            current = current.next;
+    /**
+     * Resize the internal buffer array.
+     * 
+     * This method involves copying from the current buffer to a newly allocated one.
+     * 
+     * @param newSize the new size of the internal buffer array
+     */
+    @SuppressWarnings("unchecked")
+    private void resize(int newSize) {
+        T[] newArray = (T[])(new Object[newSize]);
+        for (int i = 0; i < this.size; i++) {
+            newArray[i] = this.array[i];
         }
-        return current;
+        this.array = newArray;
     }
 
-    // --- Queue methods ---
+    // stack implementation
 
     /**
-     * Add an item to the back of the queue.
-     * @param value the item to add
+     * pushes an item onto the top of the stack.
+     * appends to the end of the array so we do not shift elements
      */
     @Override
-    public void enqueue(T value) {
-        // just insert at the end of the list
-        insert(this.size, value);
+    public void push(T value) {
+        this.insert(this.size, value);
     }
 
     /**
-     * Remove and return the front item.
-     * @return front item
+     * Remove and return the top item
      */
     @Override
-    public T dequeue() {
-        assert this.size > 0;
-        // takes from the front
-        return delete(0);
+    public T pop() {
+        assert this.size > 0 : "Cannot pop from an empty stack";
+        return this.delete(this.size - 1);
     }
 
     /**
-     * Look at the front item without removing it.
-     * @return front item
+     * looks at the item on top without deleting it
      */
     @Override
     public T peek() {
-        assert this.size > 0;
-        return at(0);
+        assert this.size > 0 : "Cannot peek into an empty stack";
+        return this.at(this.size - 1);
     }
 
     /**
-     * Check if queue is empty
-     * @return true if empty
+     * Alias for peek() in case the interface uses top().
+     */
+    public T top() {
+        return this.peek();
+    }
+
+    /**
+     * check if the stack has any elements.
      */
     @Override
     public boolean isEmpty() {
         return this.size == 0;
     }
 
-    // --- Iterator and main ---
-
     /**
-     * Returns an iterator over the elements in this list.
-     * @return an Iterator over the elements
+     * Returns an iterator over the elements in this vector in proper sequence.
+     *
+     * @return an Iterator over the elements.
      */
     @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
             private int cursor = 0;
-            // start at head if it exists
-            private Node<T> current = (tail == null) ? null : tail.next;
 
             @Override
             public boolean hasNext() {
@@ -234,10 +203,7 @@ public class CircularLinkedList<T> implements List<T>, Queue<T>, Iterable<T> {
                 if (!hasNext()) {
                     throw new NoSuchElementException();
                 }
-                T data = current.data;
-                current = current.next;
-                cursor++;
-                return data;
+                return array[cursor++];
             }
         };
     }
@@ -247,9 +213,16 @@ public class CircularLinkedList<T> implements List<T>, Queue<T>, Iterable<T> {
      * @param args command-line args
      */
     public static void main(String[] args) {
-        List.validate(new CircularLinkedList<>());
-        Queue.validate(new CircularLinkedList<>());
+        List.validate(new Vector<>());
+        Stack.validate(new Vector<>());
 
-        System.out.println("CircularLinkedList passes all tests.");
+        // Test iterator.
+        Vector<Integer> vector = new Vector<>();
+        for (int i = 0; i < INITIAL_BUFFER_SIZE; i ++) vector.insert(0, i);
+        Iterator<Integer> iter = vector.iterator();
+        for (int i = INITIAL_BUFFER_SIZE; i > 0; i --) assert iter.next().equals(i-1);
+        assert !iter.hasNext();
+
+        System.out.println("Vector passes all tests.");
     }
 }
