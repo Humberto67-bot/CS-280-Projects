@@ -40,6 +40,9 @@ public class Test {
         Vector.main(args);
         LinkedList.main(args);
         CircularLinkedList.main(args);
+        BinarySearchTree.main(args);
+        adt.PriorityQueue.validate(new PriorityEnqueuer<Integer>());
+        adt.PriorityQueue.validate(new PriorityDequeuer<Integer>());
 
         return true;
     }
