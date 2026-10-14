@@ -4,29 +4,19 @@ import adt.List;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-/**
- * Circular singly linked list implementation for the adt.List interface.
- * Maintains a reference to the tail node, where tail.next represents head.
- *
- * @param <E> element type stored in the list
- */
-public class CircularLinkedList<E> implements List<E>, Iterable<E> {
-
-    private static class Node<E> {
-        E data;
-        Node<E> next;
-
-        Node(E data, Node<E> next) {
-            this.data = data;
-            this.next = next;
-        }
-    }
-
-    private Node<E> tail;
+/// A circular linked list backed by a chain of nodes.
+///
+/// Each node contains data and a link to the next node.
+/// The last node links back to the first node.
+/// This allows insertion and deletion without moving other elements.
+///
+/// @param <T> the type of each element
+public class CircularLinkedList<T> implements List<T>, Iterable<T> {
+    private Node tail;
     private int size;
 
     /**
-     * Constructs an empty circular linked list.
+     * Initialize an empty circular linked list.
      */
     public CircularLinkedList() {
         this.tail = null;
@@ -34,244 +24,218 @@ public class CircularLinkedList<E> implements List<E>, Iterable<E> {
     }
 
     /**
-     * Returns the number of elements in the list.
-     *
-     * @return the list length
+     * Compute the number of items in this list.
+     * @return the number of items
      */
-    @Override
     public int length() {
-        return size;
+        return this.size;
     }
 
     /**
-     * Helper returning current size.
-     *
-     * @return number of items
+     * Fetch an item from the list.
+     * @param index the location of the item - a nonnegative integer less than the length of the list
+     * @return the value stored at the given location
      */
-    public int size() {
-        return size;
-    }
+    public T at(int index) {
+        assert 0 <= index && index < this.size;
 
-    /**
-     * Checks if the list is empty.
-     *
-     * @return true if size is 0
-     */
-    public boolean isEmpty() {
-        return size == 0;
-    }
+        Node current = this.tail.link;
 
-    /**
-     * Adds an element to the front of the circle.
-     *
-     * @param data value to insert
-     */
-    public void addFirst(E data) {
-        Node<E> newNode = new Node<>(data, null);
-        if (isEmpty()) {
-            tail = newNode;
-            newNode.next = tail;
-        } else {
-            newNode.next = tail.next;
-            tail.next = newNode;
+        for (int i = 0; i < index; i++) {
+            current = current.link;
         }
-        size++;
+
+        return current.data;
     }
 
     /**
-     * Adds an element to the back of the circle.
-     *
-     * @param data value to append
+     * Change an item in the list.
+     * @param index the location of the item - a nonnegative integer less than the length of the list
+     * @param value the new value to assign at the given location
      */
-    public void addLast(E data) {
-        addFirst(data);
-        tail = tail.next;
-    }
+    public void set(int index, T value) {
+        assert 0 <= index && index < this.size;
 
-    /**
-     * Inserts an element at the given index.
-     *
-     * @param index insertion position
-     * @param data element to insert
-     */
-    @Override
-    public void insert(int index, E data) {
-        if (index < 0 || index > size) throw new IndexOutOfBoundsException();
-        if (index == 0) {
-            addFirst(data);
-        } else if (index == size) {
-            addLast(data);
-        } else {
-            Node<E> prev = getNode(index - 1);
-            prev.next = new Node<>(data, prev.next);
-            size++;
+        Node current = this.tail.link;
+
+        for (int i = 0; i < index; i++) {
+            current = current.link;
         }
+
+        current.data = value;
     }
 
     /**
-     * Gets the element at the specified index.
-     *
-     * @param index element position
-     * @return data at index
+     * Check if the list contains a given value.
+     * @param value the value to look for
+     * @return true iff the collection contains value
      */
-    @Override
-    public E at(int index) {
-        checkIndex(index);
-        return getNode(index).data;
-    }
-
-    /**
-     * Updates the element at the given index.
-     *
-     * @param index position to replace
-     * @param data new element value
-     */
-    @Override
-    public void set(int index, E data) {
-        checkIndex(index);
-        getNode(index).data = data;
-    }
-
-    /**
-     * Deletes and returns the element at the given index.
-     *
-     * @param index position to remove
-     * @return removed element
-     */
-    @Override
-    public E delete(int index) {
-        checkIndex(index);
-        if (index == 0) return removeFirst();
-
-        Node<E> prev = getNode(index - 1);
-        Node<E> target = prev.next;
-        prev.next = target.next;
-        if (target == tail) tail = prev;
-        size--;
-        return target.data;
-    }
-
-    /**
-     * Removes and returns the first element.
-     *
-     * @return data from the removed head
-     */
-    public E removeFirst() {
-        if (isEmpty()) throw new NoSuchElementException();
-        Node<E> head = tail.next;
-        if (size == 1) {
-            tail = null;
-        } else {
-            tail.next = head.next;
+    public boolean contains(T value) {
+        if (this.size == 0) {
+            return false;
         }
-        size--;
-        return head.data;
-    }
 
-    /**
-     * Checks if the list contains a given value.
-     *
-     * @param data target value
-     * @return true if present, false otherwise
-     */
-    @Override
-    public boolean contains(E data) {
-        if (isEmpty()) return false;
-        Node<E> curr = tail.next;
-        for (int i = 0; i < size; i++) {
-            if (data == null ? curr.data == null : data.equals(curr.data)) return true;
-            curr = curr.next;
+        Node current = this.tail.link;
+
+        for (int i = 0; i < this.size; i++) {
+            if (value == null && current.data == null) {
+                return true;
+            }
+
+            if (value != null && value.equals(current.data)) {
+                return true;
+            }
+
+            current = current.link;
         }
+
         return false;
     }
 
-    private Node<E> getNode(int index) {
-        Node<E> curr = tail.next;
-        for (int i = 0; i < index; i++) curr = curr.next;
-        return curr;
-    }
+    /**
+     * Insert an item into the list.
+     * @param index the location of where to put the item - a nonnegative integer less than or equal to the length of the list
+     * @param value the new value to put at the given location
+     */
+    public void insert(int index, T value) {
+        assert 0 <= index && index <= this.size;
 
-    private void checkIndex(int index) {
-        if (index < 0 || index >= size) throw new IndexOutOfBoundsException();
+        if (this.size == 0) {
+            Node newNode = new Node(value, null);
+            this.tail = newNode;
+            this.tail.link = newNode;
+        } else if (index == 0) {
+            Node newNode = new Node(value, this.tail.link);
+            this.tail.link = newNode;
+        } else {
+            Node current = this.tail.link;
+
+            for (int i = 0; i < index - 1; i++) {
+                current = current.link;
+            }
+
+            Node newNode = new Node(value, current.link);
+            current.link = newNode;
+
+            if (index == this.size) {
+                this.tail = newNode;
+            }
+        }
+
+        this.size++;
     }
 
     /**
-     * Returns an iterator that visits each item in the circle once.
-     *
-     * @return Iterator instance
+     * Remove an item from the list.
+     * @param index the location to delete from - a nonnegative integer less than the length of the list
+     * @return the value which was removed
      */
-    @Override
-    public Iterator<E> iterator() {
-        return new Iterator<E>() {
-            private Node<E> curr = (tail == null) ? null : tail.next;
+    public T delete(int index) {
+        assert 0 <= index && index < this.size;
+
+        Node removed;
+
+        if (this.size == 1) {
+            removed = this.tail;
+            this.tail = null;
+        } else if (index == 0) {
+            removed = this.tail.link;
+            this.tail.link = removed.link;
+        } else {
+            Node current = this.tail.link;
+
+            for (int i = 0; i < index - 1; i++) {
+                current = current.link;
+            }
+
+            removed = current.link;
+            current.link = removed.link;
+
+            if (removed == this.tail) {
+                this.tail = current;
+            }
+        }
+
+        this.size--;
+        return removed.data;
+    }
+
+    /**
+     * An encapsulation of a value with a pointer, allowing us to chain to another value.
+     */
+    private class Node {
+        T data;
+        Node link;
+
+        /**
+         * Initialize a node with no children.
+         * @param data the data value
+         * @param link the next node in the chain
+         */
+        Node(T data, Node link) {
+            this.data = data;
+            this.link = link;
+        }
+    }
+
+    /**
+     * Returns an iterator to go through the list.
+     * @return an iterator
+     */
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
+            private Node current = tail;
             private int count = 0;
 
-            @Override
-            public boolean hasNext() { return count < size; }
+            public boolean hasNext() {
+                return count < size;
+            }
 
-            @Override
-            public E next() {
-                if (!hasNext()) throw new NoSuchElementException();
-                E val = curr.data;
-                curr = curr.next;
+            public T next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+
+                current = current.link;
                 count++;
-                return val;
+
+                return current.data;
             }
         };
     }
 
-    @Override
-    public String toString() {
-        if (isEmpty()) return "[]";
-        StringBuilder sb = new StringBuilder("[");
-        Node<E> curr = tail.next;
-        for (int i = 0; i < size; i++) {
-            sb.append(curr.data).append(i < size - 1 ? " -> " : "");
-            curr = curr.next;
-        }
-        return sb.append("]").toString();
-    }
-
     /**
-     * Test runner verifying iterator and list operations.
-     *
-     * @param args command line arguments
+     * Run validation tests.
+     * @param args command-line args
      */
     public static void main(String[] args) {
+        List.validate(new CircularLinkedList<>());
+
         CircularLinkedList<String> list = new CircularLinkedList<>();
 
-        // inserts
-        list.addFirst("B");
-        list.addFirst("A");
-        list.addLast("D");
+        list.insert(0, "A");
+        list.insert(1, "B");
         list.insert(2, "C");
 
-        if (list.length() != 4 || !"A".equals(list.at(0)) || !"D".equals(list.at(3))) {
-            throw new AssertionError("Insertion check failed");
+        // Test iterator
+        String result = "";
+
+        for (String value : list) {
+            result += value;
         }
 
-        // set and contains
-        list.set(1, "Beta");
-        if (!list.contains("Beta") || list.contains("Ghost")) {
-            throw new AssertionError("Set or contains failed");
-        }
+        assert result.equals("ABC");
 
-        // iterator test
-        String joined = "";
-        for (String s : list) joined += s + " ";
-        if (!"A Beta C D ".equals(joined)) {
-            throw new AssertionError("Iterator traversal failed");
-        }
+        // Test deleting elements
+        list.delete(0);
+        list.delete(0);
+        list.delete(0);
 
-        // deletes down to empty
-        if (!"A".equals(list.delete(0)) ||
-            !"D".equals(list.delete(list.length() - 1)) ||
-            !"Beta".equals(list.removeFirst()) ||
-            !"C".equals(list.delete(0)) ||
-            !list.isEmpty()) {
-            throw new AssertionError("Deletion checks failed");
-        }
+        assert list.length() == 0;
 
-        System.out.println("All tests passed!");
+        // Test empty iterator
+        assert !list.iterator().hasNext();
+
+        System.out.println("CircularLinkedList passes all tests.");
     }
 }
