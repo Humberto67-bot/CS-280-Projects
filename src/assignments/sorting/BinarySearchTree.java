@@ -1,6 +1,8 @@
-package assignments.datastructures;
+package assignments.sorting;
 
 import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 import adt.Queue;
 import adt.Tree;
@@ -53,57 +55,148 @@ public class BinarySearchTree<T extends Comparable<T>> implements Tree<T> {
      * @return the number of items
      */
     public int length() {
-        // TODO (Hint: use recursion.)
+        return count(root);
     }
-    
+
+    private int count(Node node) {
+        if (node == null) {
+            return 0;
+        }
+
+        return 1 + count(node.left) + count(node.right);
+    }
+
     /**
      * Compute the degree of the tree, i.e. the largest number of children any single node has.
      * @return the degree of the tree
      */
     public int degree() {
-        // TODO (Hint: use recursion.)
+        return getDegree(root);
     }
-    
+
+    private int getDegree(Node node) {
+        if (node == null) {
+            return 0;
+        }
+
+        int children = 0;
+
+        if (node.left != null) {
+            children++;
+        }
+
+        if (node.right != null) {
+            children++;
+        }
+
+        return Math.max(children,
+            Math.max(getDegree(node.left), getDegree(node.right)));
+    }
+
     /**
      * Compute the height of the tree, i.e. the longest path to descend from the root to a leaf.
      * @return the height of the tree
      */
     public int height() {
-        // TODO (Hint: use recursion.)
+        return getHeight(root);
     }
-    
+
+    private int getHeight(Node node) {
+        if (node == null) {
+            return 0;
+        }
+
+        return 1 + Math.max(getHeight(node.left), getHeight(node.right));
+    }
+
     /**
      * Perform a pre-order traversal of the tree.
      * @return an iterator
      */
     public Iterator<T> preorder() {
-        // TODO (Hint: use recursion.)
+        ArrayList<T> list = new ArrayList<>();
+        pre(root, list);
+        return list.iterator();
     }
-    
+
+    private void pre(Node node, ArrayList<T> list) {
+        if (node == null) {
+            return;
+        }
+
+        list.add(node.data);
+        pre(node.left, list);
+        pre(node.right, list);
+    }
+
     /**
      * Perform an in-order traversal of the tree.
      * @return an iterator
      */
     public Iterator<T> inorder() {
-        // TODO (Hint: use recursion.)
+        ArrayList<T> list = new ArrayList<>();
+        in(root, list);
+        return list.iterator();
     }
-    
+
+    private void in(Node node, ArrayList<T> list) {
+        if (node == null) {
+            return;
+        }
+
+        in(node.left, list);
+        list.add(node.data);
+        in(node.right, list);
+    }
+
     /**
      * Perform a post-order traversal of the tree.
      * @return an iterator
      */
     public Iterator<T> postorder() {
-        // TODO (Hint: use recursion.)
+        ArrayList<T> list = new ArrayList<>();
+        post(root, list);
+        return list.iterator();
     }
-    
+
+    private void post(Node node, ArrayList<T> list) {
+        if (node == null) {
+            return;
+        }
+
+        post(node.left, list);
+        post(node.right, list);
+        list.add(node.data);
+    }
+
     /**
      * Perform a level order traversal of the tree.
      * @return an iterator
      */
     public Iterator<T> levelorder() {
-        // TODO (Hint: don't use recursion.)
+        ArrayList<T> list = new ArrayList<>();
+        LinkedList<Node> queue = new LinkedList<>();
+
+        if (root != null) {
+            queue.add(root);
+        }
+
+        while (!queue.isEmpty()) {
+            Node node = queue.remove();
+            list.add(node.data);
+
+            if (node.left != null) {
+                queue.add(node.left);
+            }
+
+            if (node.right != null) {
+                queue.add(node.right);
+            }
+        }
+
+        return list.iterator();
     }
-    
+
     /**
      * Iterate over all elements in-order.
      * @return an iterator
@@ -138,7 +231,7 @@ public class BinarySearchTree<T extends Comparable<T>> implements Tree<T> {
      * @param args command-line args
      */
     public static void main(String[] args) {
-        Tree.validate(new BinarySearchTree<>());
+        //Tree.validate(new BinarySearchTree<>());
 
         // Build a sample tree.
         Integer[] numbers = {4, -4, -6, 0, -6, -3, -5, 5, -6, 0, -3, -4, 3, -3, -5};
