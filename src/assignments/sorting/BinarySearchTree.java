@@ -206,7 +206,91 @@ public class BinarySearchTree<T extends Comparable<T>> implements Tree<T> {
     }
 
     // NOTE: You're going to add more public methods here on the second day of trees.
-    
+
+    /**
+     * Checks if an item is in the tree.
+     * @param item the item to look for
+     * @return true if found, false if not
+     */
+    public boolean contains(T item) {
+        Node current = root;
+
+        while (current != null) {
+            int result = item.compareTo(current.data);
+
+            if (result == 0) {
+                return true;
+            } else if (result < 0) {
+                current = current.left;
+            } else {
+                current = current.right;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Adds an item to the tree.
+     * @param item the item to add
+     */
+    public void add(T item) {
+        root = addNode(root, item);
+    }
+
+    private Node addNode(Node node, T item) {
+        if (node == null) {
+            return new Node(item);
+        }
+
+        if (item.compareTo(node.data) < 0) {
+            node.left = addNode(node.left, item);
+        } else {
+            node.right = addNode(node.right, item);
+        }
+
+        return node;
+    }
+
+    /**
+     * Removes an item from the tree.
+     * @param item the item to remove
+     */
+    public void remove(T item) {
+        root = removeNode(root, item);
+    }
+
+    private Node removeNode(Node node, T item) {
+        if (node == null) {
+            return null;
+        }
+
+        if (item.compareTo(node.data) < 0) {
+            node.left = removeNode(node.left, item);
+        } else if (item.compareTo(node.data) > 0) {
+            node.right = removeNode(node.right, item);
+        } else {
+            if (node.left == null) {
+                return node.right;
+            }
+
+            if (node.right == null) {
+                return node.left;
+            }
+
+            Node smallest = node.right;
+
+            while (smallest.left != null) {
+                smallest = smallest.left;
+            }
+
+            node.data = smallest.data;
+            node.right = removeNode(node.right, smallest.data);
+        }
+
+        return node;
+    }
+
     /**
      * An encapsulation of a value with two pointers, suitable for a binary tree.
      */
@@ -231,7 +315,7 @@ public class BinarySearchTree<T extends Comparable<T>> implements Tree<T> {
      * @param args command-line args
      */
     public static void main(String[] args) {
-        //Tree.validate(new BinarySearchTree<>());
+        Tree.validate(new BinarySearchTree<Integer>());
 
         // Build a sample tree.
         Integer[] numbers = {4, -4, -6, 0, -6, -3, -5, 5, -6, 0, -3, -4, 3, -3, -5};
@@ -249,6 +333,26 @@ public class BinarySearchTree<T extends Comparable<T>> implements Tree<T> {
         assert testTraversal(tree.postorder(),  new int[]{-6, -5, -5, -6, -6, -4, -3, -3, -3, 3, 0, 0, -4, 5, 4});
         assert testTraversal(tree.levelorder(), new int[]{4, -4, 5, -6, 0, -6, -3, 0, -5, -4, -3, 3, -6, -5, -3});
         assert testTraversal(tree.iterator(),   new int[]{-6, -6, -6, -5, -5, -4, -4, -3, -3, -3, 0, 0, 3, 4, 5});
+
+        // Check contains.
+        assert tree.contains(4);
+        assert tree.contains(-6);
+        assert !tree.contains(100);
+
+        // Check add.
+        tree.add(10);
+        assert tree.contains(10);
+        assert tree.length() == 16;
+
+        // Check remove.
+        tree.remove(10);
+        assert !tree.contains(10);
+        assert tree.length() == 15;
+
+        // Check removing a value with children.
+        tree.remove(4);
+        assert !tree.contains(4);
+        assert tree.length() == 14;
 
         System.out.println("BinarySearchTree passes all tests.");
     }
